@@ -4,7 +4,7 @@
 
 PSnpBind Webapp is the repository behind the PSnpBind website that is made to visualize the results of the PSnpBind dataset and provide a REST API to access its content.
 
-This repository is part of the "PSnpBind, a database to highlight pocket SNPs effects on protein-ligand binding affinity" project and it is the final step after constructing the PSnpBind dataset as described in the [main repository](https://github.com/ammar257ammar/PSnpBind-Build).
+This repository is part of the "PSnpBind, a database to highlight pocket SNPs effects on protein-ligand binding affinity" project and it is the final step after constructing the PSnpBind dataset as described in the [main repository](https://github.com/BiGCAT-UM/PSnpBind-Build).
 
 Please prepare and build the docker using the following instruction.
 
@@ -24,7 +24,7 @@ docker build -t psnpbind-webapp .
 
 ### Run the following commands after setting the appropriate paths:
 
-Note, you need to construct the MySQL data constructed from the [main repository](https://github.com/ammar257ammar/PSnpBind-Build).
+Note, you need to construct the MySQL data constructed from the [main repository](https://github.com/BiGCAT-UM/PSnpBind-Build).
 
 ```bash
 docker network create psnpbind-network 
