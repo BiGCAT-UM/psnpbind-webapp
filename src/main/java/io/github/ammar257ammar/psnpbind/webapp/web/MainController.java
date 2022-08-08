@@ -70,18 +70,19 @@ public class MainController {
 
     	String proteinJsonLd = "";
 
-    	if(protein != null) {
-
-        	ProteinJsonLd pld = new ProteinJsonLd(protein.getPdbId(), 
-					protein.getProteinName(), 
-					protein.getUniprotId());
-
-			try {
-				proteinJsonLd = objectMapper.writeValueAsString(JsonldResource.Builder.create().build(pld));
-			} catch (JsonProcessingException e) {
-				e.printStackTrace();
-			}
+    	if(protein == null) {
+    		return new ModelAndView("notfound");
     	}
+    	
+    	ProteinJsonLd pld = new ProteinJsonLd(protein.getPdbId(), protein.getProteinUuid(),
+				protein.getProteinName(), 
+				protein.getUniprotId());
+
+		try {
+			proteinJsonLd = objectMapper.writeValueAsString(JsonldResource.Builder.create().build(pld));
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
 
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("protein", protein);
@@ -94,7 +95,11 @@ public class MainController {
     public ModelAndView getVariant(@PathVariable(value="variantId") Long variantId) {
 
     	MutatedProtein variant = (MutatedProtein) proteinVariantService.findOneByVariantId(variantId);
-
+    	
+    	if(variant == null) {
+    		return new ModelAndView("notfound");
+    	}
+    	
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("variant", variant);
 
@@ -108,11 +113,39 @@ public class MainController {
     	MutatedProteinLigand vl = (MutatedProteinLigand)  mutatedProteinLigandService.findOneById(
     									new MutatedProteinLigandId(Long.parseLong(variantId), ligandId));
     	
+    	if(vl == null) {
+    		return new ModelAndView("notfound");
+    	}
+    	
     	String[] conformers = vl.getBindingAffinity().split(";");
+    	    	
+    	String wtVariantFolder = "_WT";
+    	String listString = "";
+    	
+    	if(!vl.getVlVariant().getVariantType().equals("WT")){
+          
+          wtVariantFolder = vl.getVariantFolder().substring(0, vl.getVariantFolder().lastIndexOf('_'))+"_WT";
+          listString = "Binding Affiniy against the Wild-type protein";          
+        }else {
+          wtVariantFolder = vl.getVlVariant().getProtein().getPdbId().toLowerCase()+"_";
+          listString = "Binding Affinities Against Other "+vl.getVlVariant().getProtein().getPdbId()+" Variants";
+        }
+    	
+    	List<MutatedProteinLigand> wtList = mutatedProteinLigandService.findByVariantFolderLikeAndVlLigandAndVlVariantNot("%"+wtVariantFolder+"%", vl.getVlLigand(), vl.getVlVariant());
+        
+    	for(int i = 0; i < wtList.size(); i++) {
+    	  
+    	  String firstBindingAffinity = wtList.get(i).getBindingAffinity().split(";")[0];
+    	  
+    	  wtList.get(i).setBindingAffinity(firstBindingAffinity);
+    	}
     	
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("vl", vl);
         params.put("conformers", conformers);
+        
+        params.put("wtList", wtList);
+        params.put("listString", listString);
         
         return new ModelAndView("complex", params);
     }
@@ -123,6 +156,14 @@ public class MainController {
         Map<String, Object> params = new HashMap<String, Object>();
 
         return new ModelAndView("methodology", params);
+    }
+    
+    @GetMapping("/stats")
+    public ModelAndView getStatistics() {
+
+        Map<String, Object> params = new HashMap<String, Object>();
+
+        return new ModelAndView("stats", params);
     }
     
     @GetMapping("/citation")
